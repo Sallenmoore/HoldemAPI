@@ -1,5 +1,6 @@
 # poker-sim
-PHP API implementation of a Texas Hold'em Monte Carlo Simulator
+PHP API implementation of a Texas Hold'em Monte Carlo Simulator forked from the SpecialK library:
+https://github.com/lox/specialk-php
 
 # Overview
 TBD
