@@ -21,6 +21,7 @@ class HoldEmAPi{
             //SMDEBUG($board_cards, __LINE__);
             $this->db_key = $hole_cards.$board_cards;
             $record = $this->checkDB();
+            //SMDEBUG($record['odds'], __LINE__);
             if($exact || empty($record)){
                 $this->evaluator = new \SpecialK\Evaluate\SevenEval();
                 $this->iterations = $iters;
@@ -82,27 +83,28 @@ class HoldEmAPi{
             }
             $complete_hands[] = array_merge($player, $board_cards);
         }
-        $winners = [];
+        $winners = "";
         $max_score = 0;
-        foreach($complete_hands as $hands){
-            $score = $evaluator->evaluate($hands);
+        foreach($complete_hands as $hand){
+            //SMDEBUG($winners, __LINE__);
+            $score = $evaluator->evaluate($hand);
             if($max_score < $score){
-                $winners = [$hands];
+                $winners = implode($hand);
                 $max_score = $score;
             }else if($max_score == $score){
-                $winners[] = $hands;
+                $winners = $winners."-".implode($hand);
             }
         }
-        $winner_string = "";
-        foreach($winners as $winner){
-            $winner_string .= implode($winner);
-        }
-        $this->results = ['cards'=>$winner_string,'board'=>$board, 'odds'=>1.0];
+        $this->results = ['cards'=>$winners,'board'=>$board, 'odds'=>1.0];
     }
 
     function getResults(){
         if(!empty($this->results)){
-            $this->results['odds'] = $this->results['odds'] / log((float)$this->players, 2.0);
+            if($this->results['odds'] >= 1.0 || ($this->results['odds'] / log((float)$this->players, 2)) > 1.0){
+                $this->results['odds'] = 1.0;
+            }else{
+                $this->results['odds'] = $this->results['odds'] / log((float)$this->players, 2);
+            }
             return $this->results;
         }else
             throw new Exception("There was an error. No results. PLease send the request url to the admin. ");
@@ -139,6 +141,8 @@ class HoldEmAPi{
                     }
                 }
             }
+            //SMDEBUG("Accum: ".$accum, __LINE__);
+            //SMDEBUG("num_runs: ".$num_runs, __LINE__);
             $odds = ($accum/$num_runs); //TODO play around with this
             $this->results = ['cards'=>implode($this->hole),'board'=>(empty($this->community))?"":implode($this->community), 'odds'=>$odds];
             $this->insertIntoDatabase($this->results['cards'],$this->results['board'], $this->results['odds']);
@@ -157,6 +161,7 @@ class HoldEmAPi{
     function psim($c1, $c2){
         # Run simulations
         $accum = 0;
+        //Not a full hand
         if(5 - count($this->community) > 0){
             foreach($this->generate_boards() as $board){
                 //SMDEBUG([$c1, $c2], __LINE__);
@@ -176,7 +181,8 @@ class HoldEmAPi{
             return $accum / $this->iterations;
         }else{
             $result = $this->evaluator->compare(array_merge([$c1, $c2], $this->community), array_merge($this->hole, $this->community));
-            return ($result > 0) ? 1 : 0;
+            //SMDEBUG("result: ".$result, __LINE__);
+            return ($result < 0) ? 1 : 0;
         }
     }
 
@@ -208,8 +214,8 @@ function in_array_r($needle, $haystack, $strict = false) {
 
 function SMDEBUG($value, $line){
     if($GLOBALS['SMDEBUG_API']){
-         echo basename(__FILE__, '.php')." : ".$line." -- ";
+         echo basename(__FILE__, '.php')." : ".$line." -- \n";
          var_dump($value);
-         echo '<br/>=====<br/>';
+         echo "\n=====\n";
     }
 }

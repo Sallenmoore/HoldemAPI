@@ -270,12 +270,6 @@ class SevenEval{
      * Compare two hands, returns -1, 0, 1
      */
     public function compare($hand1, $hand2){
-        // $result = $this->evaluate($hand1) - $this->evaluate($hand2);
-        // if($GLOBALS['SMDEBUG_API'] && $result <= 0){
-        //     echo 'Result:'. $result .'<br/>';
-        //     echo 'Hand1:'. implode($hand1) .' '.$this->evaluate($hand1).'<br/>';
-        //     echo 'Hand2:'. implode($hand2).' '.$this->evaluate($hand2).'<br/>';
-        // }
         return $this->evaluate($hand1) - $this->evaluate($hand2);
     }
 }

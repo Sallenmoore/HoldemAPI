@@ -1,5 +1,5 @@
 <?php
-
+header('Content-Type: application/json; charset=utf8');
 include_once('holdemapi.php');
 
 //2-8 players
